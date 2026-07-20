@@ -26,7 +26,7 @@ export default function SkillDetailsPage() {
     useEffect(() => {
         if (!params?.id) return;
 
-        fetch(`http://localhost:5000/api/skills/${params.id}`)
+        fetch(`https://skillswap-server-ten.vercel.app/api/skills/${params.id}`)
             .then((res) => res.json())
             .then((resData) => {
                 if (resData.success && resData.data) {

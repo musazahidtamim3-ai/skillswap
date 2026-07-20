@@ -66,7 +66,7 @@ export default function AddSkillPage() {
         const skillImage = formData.image.trim() || FALLBACK_IMAGES[formData.category] || "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=600&auto=format&fit=crop";
 
         try {
-            const res = await fetch("http://localhost:5000/api/skills", {
+            const res = await fetch("https://skillswap-server-ten.vercel.app/api/skills", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

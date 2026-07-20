@@ -24,7 +24,7 @@ export default function ProfilePage() {
 
     useEffect(() => {
         if (session?.user?.email) {
-            fetch(`http://localhost:5000/api/users/dashboard/info?email=${session.user.email}`)
+            fetch(`https://skillswap-server-ten.vercel.app/api/users/dashboard/info?email=${session.user.email}`)
                 .then((res) => res.json())
                 .then((resData) => {
                     if (resData.success && resData.data?.user) {

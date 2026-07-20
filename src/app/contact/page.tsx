@@ -39,7 +39,7 @@ export default function ContactPage() {
 
         try {
             // Replace with your actual backend endpoint
-            await fetch("http://localhost:5000/api/contact", {
+            await fetch("https://skillswap-server-ten.vercel.app/api/contact", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(formData),

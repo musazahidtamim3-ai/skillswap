@@ -30,7 +30,7 @@ export default function AllSkillsPage() {
     const itemsPerPage = 6;
 
     useEffect(() => {
-        fetch(`http://localhost:5000/api/skills?limit=500`)
+        fetch(`https://skillswap-server-ten.vercel.app/api/skills?limit=500`)
             .then((res) => res.json())
             .then((resData) => {
                 const fetchedSkills = resData.data || [];

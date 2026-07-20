@@ -21,7 +21,7 @@ export default function MySkillsPage() {
 
     useEffect(() => {
         if (session?.user?.email) {
-            fetch(`http://localhost:5000/api/skills?limit=100`)
+            fetch(`https://skillswap-server-ten.vercel.app/api/skills?limit=100`)
                 .then((res) => res.json())
                 .then((resData) => {
                     const allSkills = resData.data || [];
@@ -53,7 +53,7 @@ export default function MySkillsPage() {
         setIsDeleting(true);
 
         try {
-            const res = await fetch(`http://localhost:5000/api/skills/${selectedSkillId}`, {
+            const res = await fetch(`https://skillswap-server-ten.vercel.app/api/skills/${selectedSkillId}`, {
                 method: "DELETE",
             });
 
