@@ -1,212 +1,271 @@
-"use client";
-
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { toast } from "react-toastify";
+'use client'
 import { authClient } from "@/src/lib/auth-client";
+import React, { useState } from "react";
+import { toast } from "react-toastify";
+export interface AISuggestionResponse {
+    success: boolean;
+    data: {
+        category: string;
+        description: string;
+    };
+}
 
-const CATEGORIES = [
-    "Web Development",
-    "Mobile App Development",
-    "UI/UX Design",
-    "Graphic Design",
-    "Digital Marketing",
-    "Language & Communication",
-    "Data Science & AI",
-    "Photography & Videography",
-    "Music & Arts",
-    "Business & Finance",
-];
-
-const FALLBACK_IMAGES: Record<string, string> = {
-    "Web Development": "https://images.unsplash.com/photo-1498050108023-c5249f4df085",
-    "Mobile App Development": "https://images.unsplash.com/photo-1633250391894-397930e3f5f2",
-    "UI/UX Design": "https://images.unsplash.com/photo-1559028012-481c04fa702d",
-    "Graphic Design": "https://images.unsplash.com/photo-1626785774573-4b799315345d",
-    "Digital Marketing": "https://images.unsplash.com/photo-1460925895917-afdab827c52f",
-    "Language & Communication": "https://images.unsplash.com/photo-1546410531-bb4caa6b424d",
-    "Data Science & AI": "https://images.unsplash.com/photo-1527474305487-b87b222841cc",
-    "Photography & Videography": "https://images.unsplash.com/photo-1516035069371-29a1b244cc32",
-    "Music & Arts": "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4",
-    "Business & Finance": "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40",
+const DEFAULT_IMAGES_BY_CATEGORY: Record<string, string> = {
+    "Web Development": "https://images.unsplash.com/photo-1547658719-da2b81166b58?w=600",
+    "UI/UX Design": "https://images.unsplash.com/photo-1561070791-26c113006238?w=600",
+    "Digital Marketing": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=600",
+    "Language": "https://images.unsplash.com/photo-1546410531-bb4caa6b424d?w=600",
+    "General": "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=600"
 };
 
-export default function AddSkillPage() {
-    const router = useRouter();
+export default function CreateSkillFormPremium() {
     const { data: session, isPending } = authClient.useSession();
 
-    const [formData, setFormData] = useState({
-        title: "",
-        category: CATEGORIES[0],
-        description: "",
-        level: "Beginner",
-        image: "",
-    });
-    const [isLoading, setIsLoading] = useState(false);
+    const [title, setTitle] = useState<string>("");
+    const [image, setImage] = useState<string>("");
+    const [level, setLevel] = useState<string>("Beginner");
+    const [category, setCategory] = useState<string>("");
+    const [description, setDescription] = useState<string>("");
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+    const [isGenerating, setIsGenerating] = useState<boolean>(false);
+    const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+
+    const typeWriterEffect = (fullText: string, setFieldState: React.Dispatch<React.SetStateAction<string>>) => {
+        let currentText = "";
+        let index = 0;
+        setFieldState("");
+        const interval = setInterval(() => {
+            if (index < fullText.length) {
+                currentText += fullText[index];
+                setFieldState(currentText);
+                index++;
+            } else {
+                clearInterval(interval);
+            }
+        }, 10);
+    };
+
+    const handleAiGenerate = async () => {
+        if (!title.trim()) {
+            alert("Please enter a skill title first!");
+            return;
+        }
+
+        setIsGenerating(true);
+        try {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_URL}/api/skills/suggest-content`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ title }),
+            });
+            const result: AISuggestionResponse = await res.json();
+
+            if (result.success) {
+                const aiCategory = result.data.category;
+                setCategory(aiCategory);
+                typeWriterEffect(result.data.description, setDescription);
+
+                if (!image.trim()) {
+                    setImage(DEFAULT_IMAGES_BY_CATEGORY[aiCategory] || DEFAULT_IMAGES_BY_CATEGORY["General"]);
+                }
+            }
+        } catch (err) {
+            console.error("AI Generation failed:", err);
+            alert("AI Service is temporarily unavailable.");
+        } finally {
+            setIsGenerating(false);
+        }
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (!session?.user?.email) {
-            toast.error("You must be logged in to add a skill");
+        if (!session?.user) {
+            alert("You must be logged in to publish a skill!");
             return;
         }
 
-        if (!formData.title || !formData.category || !formData.description) {
-            toast.error("Please fill in all required fields");
+        if (!title.trim() || !category.trim() || !description.trim()) {
+            alert("Please fill all required fields before publishing!");
             return;
         }
 
-        setIsLoading(true);
+        setIsSubmitting(true);
 
-        const skillImage = formData.image.trim() || FALLBACK_IMAGES[formData.category] || "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=600&auto=format&fit=crop";
+        const skillPayload = {
+            title,
+            category,
+            description,
+            level,
+            image: image.trim() !== "" ? image : (DEFAULT_IMAGES_BY_CATEGORY[category] || DEFAULT_IMAGES_BY_CATEGORY["General"]),
+            userEmail: session.user.email,
+            creatorName: session.user.name || "Anonymous User",
+            creatorImage: session.user.image || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100"
+        };
 
         try {
-            const res = await fetch("https://skillswap-server-ten.vercel.app/api/skills", {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_URL}/api/skills/ai-generate`, {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    title: formData.title,
-                    category: formData.category,
-                    description: formData.description,
-                    level: formData.level,
-                    image: skillImage,
-                    userEmail: session.user.email,
-                    creatorName: session.user.name || "Anonymous User",
-                    creatorImage: session.user.image || "",
-                }),
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(skillPayload),
             });
 
-            const data = await res.json();
+            const result = await res.json();
 
-            if (res.ok && data.acknowledged) {
-                toast.success("Skill added successfully!");
-                setFormData({ title: "", category: CATEGORIES[0], description: "", level: "Beginner", image: "" });
-                router.push("/dashboard/user");
+            if (result.success) {
+                toast.success(" Skill Track Published Successfully!");
+                setTitle("");
+                setImage("");
+                setCategory("");
+                setDescription("");
+                setLevel("Beginner");
             } else {
-                toast.error(data.message || "Failed to add skill");
+                alert(`Failed to save: ${result.message}`);
             }
-        } catch (error) {
-            console.error("Error adding skill:", error);
-            toast.error("Something went wrong. Please try again.");
+        } catch (err) {
+            console.error("Submission Error:", err);
+            alert("Server error occurred while publishing.");
         } finally {
-            setIsLoading(false);
+            setIsSubmitting(false);
         }
     };
 
     if (isPending) {
         return (
-            <div className="min-h-screen bg-gray-950 flex items-center justify-center">
-                <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-pink-500"></div>
+            <div className="max-w-xl mx-auto p-8 bg-[#121420]/80 border border-[#1f2335] rounded-2xl h-[400px] flex items-center justify-center">
+                <div className="w-8 h-8 border-2 border-pink-500/30 border-t-pink-500 rounded-full animate-spin" />
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen w-full flex items-center justify-center p-4 sm:p-8 relative overflow-hidden bg-gray-950 text-white">
-            <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-purple-600/10 rounded-full blur-3xl pointer-events-none" />
-            <div className="absolute bottom-1/4 right-1/4 w-72 h-72 bg-pink-600/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="max-w-xl mx-auto p-8 bg-[#121420]/80 border border-[#1f2335] rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.3)] mt-6 text-slate-200 backdrop-blur-md">
 
-            <div className="w-full max-w-3xl bg-gray-900/60 backdrop-blur-xl border border-gray-800 rounded-2xl p-6 sm:p-10 shadow-2xl relative z-10">
+            {/* Header */}
+            <div className="mb-8 text-center sm:text-left">
+                <h2 className="text-2xl font-extrabold tracking-tight text-white flex items-center gap-2 justify-center sm:justify-start">
+                    Create Premium Skill Session
+                </h2>
+                <p className="text-xs text-slate-400 mt-1.5">Connected as: <span className="text-pink-400 font-medium">{session?.user?.name || "Guest"}</span></p>
+            </div>
 
-                <div className="mb-8 text-center">
-                    <h2 className="text-3xl font-extrabold bg-gradient-to-r from-purple-400 via-fuchsia-400 to-pink-400 bg-clip-text text-transparent mb-2">
-                        Share a New Skill
-                    </h2>
-                    <p className="text-sm text-gray-400">
-                        Add a skill you want to teach and help others grow in the SkillSwap community.
-                    </p>
+            <form onSubmit={handleSubmit} className="space-y-6">
+
+                {/* Title Field */}
+                <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Skill Title <span className="text-pink-500">*</span></label>
+                    <input
+                        type="text"
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
+                        placeholder="e.g., Advanced Next.js Architecture"
+                        className="w-full bg-[#0d0f17] border border-[#23283d] focus:border-pink-500 focus:ring-1 focus:ring-pink-500 rounded-xl p-3.5 text-slate-200 placeholder-slate-600 focus:outline-none transition-all duration-200 shadow-inner"
+                        required
+                    />
+                    <button
+                        type="button"
+                        onClick={handleAiGenerate}
+                        disabled={isGenerating || isSubmitting}
+                        className="mt-3 w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold text-xs uppercase tracking-wider py-3 px-4 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 shadow-lg shadow-purple-900/20 disabled:opacity-40"
+                    >
+                        {isGenerating ? (
+                            <>
+                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                AI is Texting...
+                            </>
+                        ) : "✨ Autofill with AI"}
+                    </button>
                 </div>
 
-                <form onSubmit={handleSubmit} className="space-y-5">
-                    {/* Skill Title */}
+                {/* Level Dropdown */}
+                <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Difficulty Level</label>
+                    <div className="relative">
+                        <select
+                            value={level}
+                            onChange={(e) => setLevel(e.target.value)}
+                            className="w-full bg-[#0d0f17] border border-[#23283d] focus:border-pink-500 rounded-xl p-3.5 text-slate-200 focus:outline-none transition-all appearance-none cursor-pointer"
+                        >
+                            <option value="Beginner" className="bg-[#0d0f17]">🟢 Beginner</option>
+                            <option value="Intermediate" className="bg-[#0d0f17]">🟡 Intermediate</option>
+                            <option value="Advanced" className="bg-[#0d0f17]">🔴 Advanced</option>
+                        </select>
+                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-500">
+                            ▼
+                        </div>
+                    </div>
+                </div>
+
+                {/* Image Input */}
+                <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Cover Image URL (Optional)</label>
+                    <input
+                        type="text"
+                        value={image}
+                        onChange={(e) => setImage(e.target.value)}
+                        placeholder="Leave blank for smart AI image mapping"
+                        className="w-full bg-[#0d0f17] border border-[#23283d] focus:border-pink-500 rounded-xl p-3.5 text-slate-300 font-mono text-xs focus:outline-none transition-all"
+                    />
+                    {image && (
+                        <div className="mt-3 border border-[#23283d] rounded-xl overflow-hidden h-40 w-full relative shadow-md">
+                            <img src={image} alt="Preview" className="w-full h-full object-cover" />
+                            <span className="absolute bottom-2 left-2 text-[10px] bg-slate-950/80 px-2 py-0.5 rounded text-slate-400 border border-slate-800">Preview Layout</span>
+                        </div>
+                    )}
+                </div>
+
+                {/* AI Preview Section */}
+                <div className="pt-4 border-t border-[#1f2335] space-y-4">
+                    <div className="flex items-center gap-2">
+                        <span className="flex h-2 w-2 relative">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-pink-400 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-2 w-2 bg-pink-500"></span>
+                        </span>
+                        <h3 className="text-xs font-bold uppercase tracking-widest text-pink-400">AI Engine Preview</h3>
+                    </div>
+
+                    {/* Category Input */}
                     <div>
-                        <label className="block text-xs font-semibold text-gray-300 mb-1.5">Skill Title *</label>
+                        <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">Detected Category *</label>
                         <input
                             type="text"
-                            name="title"
-                            placeholder="e.g., React.js Development, Basic Photography"
-                            value={formData.title}
-                            onChange={handleChange}
-                            className="w-full rounded-xl border border-gray-800 bg-gray-950 px-4 py-3 text-sm text-white placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500/40 focus:border-purple-500 transition-all"
+                            value={category}
+                            onChange={(e) => setCategory(e.target.value)}
+                            className="w-full bg-[#161224]/40 border border-purple-900/30 focus:border-pink-500 rounded-xl p-3.5 text-pink-400 placeholder-slate-700 focus:outline-none transition-all"
+                            placeholder="Waiting for AI categorization..."
+                            required
                         />
                     </div>
 
-                    {/* Category Dropdown */}
+                    {/* Description Textarea */}
                     <div>
-                        <label className="block text-xs font-semibold text-gray-300 mb-1.5">Category *</label>
-                        <select
-                            name="category"
-                            value={formData.category}
-                            onChange={handleChange}
-                            className="w-full rounded-xl border border-gray-800 bg-gray-950 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-purple-500/40 focus:border-purple-500 transition-all cursor-pointer [&>option]:bg-gray-900"
-                        >
-                            {CATEGORIES.map((cat) => (
-                                <option key={cat} value={cat}>
-                                    {cat}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-
-                    {/* Skill Image URL */}
-                    <div>
-                        <label className="block text-xs font-semibold text-gray-300 mb-1.5">Skill Banner Image URL (Optional)</label>
-                        <input
-                            type="text"
-                            name="image"
-                            placeholder="https://example.com/skill-image.jpg"
-                            value={formData.image}
-                            onChange={handleChange}
-                            className="w-full rounded-xl border border-gray-800 bg-gray-950 px-4 py-3 text-sm text-white placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500/40 focus:border-purple-500 transition-all"
-                        />
-                        <p className="text-[10px] text-gray-500 mt-1">If image field is empty, then category based image will be set automatically!</p>
-                    </div>
-
-                    {/* Experience/Expertise Level */}
-                    <div>
-                        <label className="block text-xs font-semibold text-gray-300 mb-1.5">Your Expertise Level</label>
-                        <select
-                            name="level"
-                            value={formData.level}
-                            onChange={handleChange}
-                            className="w-full rounded-xl border border-gray-800 bg-gray-950 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-pink-500/40 focus:border-pink-500 transition-all cursor-pointer [&>option]:bg-gray-900"
-                        >
-                            <option value="Beginner">Beginner (1+ Years)</option>
-                            <option value="Intermediate">Intermediate (2+ Years)</option>
-                            <option value="Expert">Expert (5+ Years)</option>
-                        </select>
-                    </div>
-
-                    {/* Description */}
-                    <div>
-                        <label className="block text-xs font-semibold text-gray-300 mb-1.5">Description *</label>
+                        <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">Generated Description *</label>
                         <textarea
-                            name="description"
-                            rows={4}
-                            placeholder="Briefly describe what you will teach, topics covered, or any prerequisites..."
-                            value={formData.description}
-                            onChange={handleChange}
-                            className="w-full rounded-xl border border-gray-800 bg-gray-950 px-4 py-3 text-sm text-white placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-pink-500/40 focus:border-pink-500 transition-all resize-none"
+                            value={description}
+                            onChange={(e) => setDescription(e.target.value)}
+                            className="w-full bg-[#161224]/40 border border-purple-900/30 focus:border-pink-500 rounded-xl p-3.5 h-32 text-slate-300 placeholder-slate-700 focus:outline-none transition-all resize-none leading-relaxed"
+                            placeholder="AI text typewriter effect output..."
+                            required
                         />
                     </div>
+                </div>
 
-                    {/* Submit Button */}
-                    <button
-                        type="submit"
-                        disabled={isLoading}
-                        className="w-full rounded-xl bg-gradient-to-r from-purple-600 via-fuchsia-600 to-pink-500 py-3 text-sm font-bold text-white hover:opacity-90 transition-all transform hover:-translate-y-0.5 shadow-lg shadow-purple-500/20 mt-4 disabled:opacity-60 disabled:hover:translate-y-0"
-                    >
-                        {isLoading ? "Adding Skill..." : "Add Skill to Profile"}
-                    </button>
-                </form>
-            </div>
+                {/* Publish Button */}
+                <button
+                    type="submit"
+                    disabled={isSubmitting || isGenerating}
+                    className="w-full bg-gradient-to-r from-pink-500 to-purple-600 hover:opacity-95 text-white font-bold py-3.5 px-4 rounded-xl transition-all shadow-xl uppercase tracking-wider text-xs mt-2 flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                    {isSubmitting ? (
+                        <>
+                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                            Saving to Database...
+                        </>
+                    ) : (
+                        <>🚀 Publish New Skill Track</>
+                    )}
+                </button>
+            </form>
         </div>
     );
 }

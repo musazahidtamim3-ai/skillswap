@@ -31,7 +31,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     ];
 
     return (
-        <div className="min-h-screen bg-gray-800 text-neutral-900 flex flex-col relative transition-colors duration-300">
+        <div className="min-h-screen bg-gray-950 text-neutral-900 flex flex-col relative transition-colors duration-300">
+
+            <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-pink-600/10 rounded-full blur-3xl pointer-events-none" />
 
             {/* Mobile menu toggle */}
             <div className="md:hidden fixed bottom-6 right-6 z-50">

@@ -38,8 +38,7 @@ export default function ContactPage() {
         setIsLoading(true);
 
         try {
-            // Replace with your actual backend endpoint
-            await fetch("https://skillswap-server-ten.vercel.app/api/contact", {
+            await fetch(`${process.env.NEXT_PUBLIC_URL}/api/contact`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(formData),
@@ -82,7 +81,7 @@ export default function ContactPage() {
     return (
         <main className="bg-gray-900">
             {/* Hero */}
-            <section className="relative py-20 bg-gradient-to-br from-purple-700 via-fuchsia-700 to-pink-600 overflow-hidden">
+            <section className="relative py-10 overflow-hidden">
                 <div className="absolute -top-20 -left-20 w-72 h-72 bg-pink-400 rounded-full mix-blend-multiply filter blur-3xl opacity-30" />
                 <div className="absolute -bottom-20 -right-20 w-72 h-72 bg-purple-400 rounded-full mix-blend-multiply filter blur-3xl opacity-30" />
 
@@ -90,7 +89,7 @@ export default function ContactPage() {
                     <span className="inline-block px-4 py-1 rounded-full text-sm font-semibold text-white bg-white/15 backdrop-blur-sm mb-4">
                         Contact Us
                     </span>
-                    <h1 className="text-4xl md:text-5xl font-extrabold text-white mb-4">
+                    <h1 className="text-4xl md:text-5xl font-extrabold bg-linear-to-l from-pink-600 to-purple-400 bg-clip-text text-transparent mb-4">
                         We&apos;d Love to Hear From You
                     </h1>
                     <p className="text-lg text-purple-50 max-w-xl mx-auto">

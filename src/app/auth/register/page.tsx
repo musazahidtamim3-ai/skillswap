@@ -26,7 +26,7 @@ export default function SignUpPage() {
 
     const saveUserToDB = async (finalImage: string) => {
         try {
-            const res = await fetch("https://skillswap-server-ten.vercel.app/api/users", {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_URL}/api/users`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({

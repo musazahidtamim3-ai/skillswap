@@ -16,7 +16,7 @@ export default function EditProfileTags() {
 
     useEffect(() => {
         if (session?.user?.email) {
-            fetch(`https://skillswap-server-ten.vercel.app/api/users/dashboard/info?email=${session.user.email}`)
+            fetch(`${process.env.NEXT_PUBLIC_URL}/api/users/dashboard/info?email=${session.user.email}`)
                 .then((res) => res.json())
                 .then((resData) => {
                     if (resData.success && resData.data?.user) {
@@ -40,7 +40,7 @@ export default function EditProfileTags() {
         const arrLearn = tags.skillsToLearn.split(",").map(s => s.trim()).filter(Boolean);
 
         try {
-            const res = await fetch("https://skillswap-server-ten.vercel.app/api/users/profile", {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_URL}/api/users/profile`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({

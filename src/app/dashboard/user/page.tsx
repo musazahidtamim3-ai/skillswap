@@ -55,7 +55,7 @@ export default function UserDashboardHome() {
 
                 const userEmail = authData.user.email;
 
-                const response = await fetch(`https://skillswap-server-ten.vercel.app/api/users/dashboard/info?email=${encodeURIComponent(userEmail)}`);
+                const response = await fetch(`${process.env.NEXT_PUBLIC_URL}/api/users/dashboard/info?email=${encodeURIComponent(userEmail)}`);
                 if (!response.ok) throw new Error("Failed to load dashboard statistics");
 
                 const jsonResponse = await response.json();

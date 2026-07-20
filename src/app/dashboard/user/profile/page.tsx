@@ -24,7 +24,7 @@ export default function ProfilePage() {
 
     useEffect(() => {
         if (session?.user?.email) {
-            fetch(`https://skillswap-server-ten.vercel.app/api/users/dashboard/info?email=${session.user.email}`)
+            fetch(`${process.env.NEXT_PUBLIC_URL}/api/users/dashboard/info?email=${session.user.email}`)
                 .then((res) => res.json())
                 .then((resData) => {
                     if (resData.success && resData.data?.user) {
@@ -69,9 +69,6 @@ export default function ProfilePage() {
 
     return (
         <div className="min-h-screen bg-gray-950 text-white pb-12 relative overflow-hidden">
-            <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl pointer-events-none" />
-            <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-pink-600/10 rounded-full blur-3xl pointer-events-none" />
-
             <div className="w-full h-64 sm:h-80 relative overflow-hidden border-b border-gray-800">
                 <img
                     src={profile.coverPhoto}
