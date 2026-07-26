@@ -80,13 +80,13 @@ export default function Hero() {
                   </p>
                   <div className="flex flex-col md:flex-row justify-center gap-4">
                     <Link
-                      href="/skills"
+                      href="/browse-skills"
                       className="px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-600 text-white font-semibold rounded-full shadow-lg hover:from-pink-600 hover:to-purple-700 hover:scale-105 transition"
                     >
                       Explore Skills
                     </Link>
                     <Link
-                      href="/skills/add"
+                      href="/dashboard/user/add-skills"
                       className="px-6 py-3 bg-white/10 backdrop-blur-sm border border-white/50 text-white font-semibold rounded-full hover:bg-white/20 hover:scale-105 transition"
                     >
                       Start Teaching
