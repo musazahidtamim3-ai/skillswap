@@ -40,7 +40,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             <div className="md:hidden fixed bottom-6 right-6 z-50">
                 <button
                     onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                    className="flex items-center justify-center h-14 w-14 rounded-full bg-gradient-to-r from-[#fe8c00] to-[#f83600] text-white shadow-xl shadow-orange-600/30 border border-orange-400/30 focus:outline-none active:scale-95 transition-transform"
+                    className="flex items-center justify-center h-14 w-14 rounded-full bg-gradient-to-r from-purple-500 to-indigo-500 text-white shadow-xl shadow-orange-600/30 border border-orange-400/30 focus:outline-none active:scale-95 transition-transform"
                 >
                     {isSidebarOpen ? <Xmark className="h-6 w-6" /> : <Bars className="h-6 w-6" />}
                 </button>
