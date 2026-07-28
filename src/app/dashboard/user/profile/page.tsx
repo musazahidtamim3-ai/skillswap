@@ -17,38 +17,74 @@ type UserProfile = {
     reviewCount?: number;
 };
 
+const DEFAULT_COVER =
+    "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1200&auto=format&fit=crop";
+
 export default function ProfilePage() {
     const { data: session, isPending: sessionLoading } = authClient.useSession();
     const [profile, setProfile] = useState<UserProfile | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [fetchError, setFetchError] = useState(false);
 
     useEffect(() => {
-        if (session?.user?.email) {
-            fetch(`${process.env.NEXT_PUBLIC_URL}/api/users/dashboard/info?email=${session.user.email}`)
-                .then((res) => res.json())
-                .then((resData) => {
-                    if (resData.success && resData.data?.user) {
-                        setProfile({
-                            name: resData.data.user.name,
-                            email: session.user.email,
-                            photo: resData.data.user.avatarUrl,
-                            coverPhoto: resData.data.user.coverPhoto || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1200&auto=format&fit=crop",
-                            skillsToTeach: resData.data.user.skillsToTeach,
-                            skillsToLearn: resData.data.user.skillsToLearn,
-                            learningBalanceMinutes: resData.data.user.learningBalanceMinutes,
-                            rating: resData.data.user.rating,
-                            reviewCount: resData.data.user.reviewCount,
-                        });
-                    }
-                })
-                .catch((err) => {
-                    console.error(err);
-                    toast.error("Failed to load profile data");
-                })
-                .finally(() => setIsLoading(false));
-        } else if (!sessionLoading) {
-            setIsLoading(false);
+        if (!session?.user?.email) {
+            if (!sessionLoading) setIsLoading(false);
+            return;
         }
+
+        let cancelled = false;
+        setIsLoading(true);
+        setFetchError(false);
+
+        fetch(
+            `${process.env.NEXT_PUBLIC_URL}/api/users/dashboard/info?email=${encodeURIComponent(
+                session.user.email
+            )}`
+        )
+            .then(async (res) => {
+                if (!res.ok) {
+                    throw new Error(`Request failed with status ${res.status}`);
+                }
+                return res.json();
+            })
+            .then((resData) => {
+                if (cancelled) return;
+
+                if (resData.success && resData.data?.user) {
+                    const u = resData.data.user;
+                    const fallbackAvatar = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(
+                        u.name || session.user.email
+                    )}`;
+
+                    setProfile({
+                        name: u.name,
+                        email: session.user.email,
+                        photo: u.avatarUrl || fallbackAvatar,
+                        coverPhoto: u.coverPhoto || DEFAULT_COVER,
+                        skillsToTeach: u.skillsToTeach,
+                        skillsToLearn: u.skillsToLearn,
+                        learningBalanceMinutes: u.learningBalanceMinutes,
+                        rating: u.rating,
+                        reviewCount: u.reviewCount,
+                    });
+                } else {
+                    setFetchError(true);
+                    toast.error("Couldn't load your profile data");
+                }
+            })
+            .catch((err) => {
+                if (cancelled) return;
+                console.error(err);
+                setFetchError(true);
+                toast.error("Failed to load profile data");
+            })
+            .finally(() => {
+                if (!cancelled) setIsLoading(false);
+            });
+
+        return () => {
+            cancelled = true;
+        };
     }, [session, sessionLoading]);
 
     if (sessionLoading || isLoading) {
@@ -59,10 +95,26 @@ export default function ProfilePage() {
         );
     }
 
-    if (!session?.user || !profile) {
+    // Not logged in at all
+    if (!session?.user) {
         return (
             <div className="min-h-screen bg-gray-950 flex items-center justify-center text-gray-400">
                 Please log in to view your profile.
+            </div>
+        );
+    }
+
+    // Logged in, but profile data failed to load
+    if (fetchError || !profile) {
+        return (
+            <div className="min-h-screen bg-gray-950 flex flex-col items-center justify-center text-gray-400 gap-4">
+                <p>We couldn&apos;t load your profile right now.</p>
+                <button
+                    onClick={() => window.location.reload()}
+                    className="px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 rounded-xl font-semibold text-white transition-all"
+                >
+                    Try again
+                </button>
             </div>
         );
     }
@@ -74,6 +126,9 @@ export default function ProfilePage() {
                     src={profile.coverPhoto}
                     alt="Cover Banner"
                     className="w-full h-full object-cover opacity-80"
+                    onError={(e) => {
+                        (e.target as HTMLImageElement).src = DEFAULT_COVER;
+                    }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-gray-950 via-transparent to-transparent" />
             </div>
@@ -85,6 +140,11 @@ export default function ProfilePage() {
                             src={profile.photo}
                             alt={profile.name}
                             className="w-full h-full object-cover rounded-xl"
+                            onError={(e) => {
+                                (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(
+                                    profile.name || profile.email
+                                )}`;
+                            }}
                         />
                     </div>
                     <Link href="/dashboard/user/profile/edit">
@@ -108,17 +168,25 @@ export default function ProfilePage() {
                             <div className="space-y-4">
                                 <div className="flex justify-between items-center">
                                     <span className="text-sm text-gray-400">Balance</span>
-                                    <span className="text-sm font-semibold text-purple-400">{profile.learningBalanceMinutes} min</span>
+                                    <span className="text-sm font-semibold text-purple-400">
+                                        {profile.learningBalanceMinutes ?? 0} min
+                                    </span>
                                 </div>
                                 <div className="flex justify-between items-center">
                                     <span className="text-sm text-gray-400">Rating</span>
                                     <span className="text-sm font-semibold text-amber-400 flex items-center gap-1">
-                                        ★ {profile.rating?.toFixed(1)}
+                                        {profile.rating != null ? (
+                                            <>★ {profile.rating.toFixed(1)}</>
+                                        ) : (
+                                            <span className="text-gray-500">No ratings yet</span>
+                                        )}
                                     </span>
                                 </div>
                                 <div className="flex justify-between items-center">
                                     <span className="text-sm text-gray-400">Reviews</span>
-                                    <span className="text-sm font-semibold text-pink-400">{profile.reviewCount} total</span>
+                                    <span className="text-sm font-semibold text-pink-400">
+                                        {profile.reviewCount ?? 0} total
+                                    </span>
                                 </div>
                             </div>
                         </div>

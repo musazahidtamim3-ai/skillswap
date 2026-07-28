@@ -195,7 +195,7 @@ export default function LoginPage() {
                                 placeholder="you@example.com"
                                 value={formData.email}
                                 onChange={handleChange}
-                                className="w-full rounded-xl border border-neutral-600 bg-gray-700 px-4 py-3 text-sm text-neutral-800 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-purple-400/40 focus:border-purple-400 transition-all"
+                                className="w-full rounded-xl border border-neutral-600 bg-gray-700 px-4 py-3 text-sm text-neutral-200 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-purple-400/40 focus:border-purple-400 transition-all"
                             />
                         </div>
 
@@ -216,7 +216,7 @@ export default function LoginPage() {
                                     placeholder="Enter your password"
                                     value={formData.password}
                                     onChange={handleChange}
-                                    className="w-full rounded-xl border border-neutral-600 bg-gray-700 pl-4 pr-12 py-3 text-sm text-neutral-800 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-pink-400/40 focus:border-pink-400 transition-all"
+                                    className="w-full rounded-xl border border-neutral-600 bg-gray-700 pl-4 pr-12 py-3 text-sm text-neutral-200 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-pink-400/40 focus:border-pink-400 transition-all"
                                 />
 
                                 <button

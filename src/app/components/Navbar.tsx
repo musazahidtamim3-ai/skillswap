@@ -264,14 +264,6 @@ export default function Navbar() {
                   Dashboard
                 </Link>
 
-                <Link
-                  href="/skills/manage"
-                  onClick={() => setIsMenuOpen(false)}
-                  className="block rounded-xl border border-gray-700 px-4 py-3 text-sm font-bold text-gray-200 hover:bg-gray-800 transition-colors"
-                >
-                  Manage Skills
-                </Link>
-
                 <button
                   onClick={handleLogout}
                   className="w-full flex items-center justify-center gap-2 rounded-xl bg-red-500/10 px-4 py-3 text-sm font-bold text-red-400 hover:bg-red-500/20 transition-colors"

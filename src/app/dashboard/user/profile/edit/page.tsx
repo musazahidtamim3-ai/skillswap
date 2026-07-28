@@ -6,8 +6,9 @@ import { authClient } from "@/src/lib/auth-client";
 import { useRouter } from "next/navigation";
 
 export default function EditProfileTags() {
-    const { data: session } = authClient.useSession();
+    const { data: session, isPending: sessionLoading } = authClient.useSession();
     const [isLoading, setIsLoading] = useState(false);
+    const [isFetching, setIsFetching] = useState(true);
     const [tags, setTags] = useState({
         skillsToTeach: "",
         skillsToLearn: ""
@@ -15,20 +16,49 @@ export default function EditProfileTags() {
     const router = useRouter();
 
     useEffect(() => {
-        if (session?.user?.email) {
-            fetch(`${process.env.NEXT_PUBLIC_URL}/api/users/dashboard/info?email=${session.user.email}`)
-                .then((res) => res.json())
-                .then((resData) => {
-                    if (resData.success && resData.data?.user) {
-                        setTags({
-                            skillsToTeach: (resData.data.user.skillsToTeach || []).join(", "),
-                            skillsToLearn: (resData.data.user.skillsToLearn || []).join(", ")
-                        });
-                    }
-                })
-                .catch((err) => console.error(err));
+        if (!session?.user?.email) {
+            if (!sessionLoading) setIsFetching(false);
+            return;
         }
-    }, [session]);
+
+        let cancelled = false;
+        setIsFetching(true);
+
+        fetch(
+            `${process.env.NEXT_PUBLIC_URL}/api/users/dashboard/info?email=${encodeURIComponent(
+                session.user.email
+            )}`
+        )
+            .then(async (res) => {
+                if (!res.ok) {
+                    throw new Error(`Request failed with status ${res.status}`);
+                }
+                return res.json();
+            })
+            .then((resData) => {
+                if (cancelled) return;
+                if (resData.success && resData.data?.user) {
+                    setTags({
+                        skillsToTeach: (resData.data.user.skillsToTeach || []).join(", "),
+                        skillsToLearn: (resData.data.user.skillsToLearn || []).join(", ")
+                    });
+                } else {
+                    toast.error("Couldn't load your current preferences");
+                }
+            })
+            .catch((err) => {
+                if (cancelled) return;
+                console.error(err);
+                toast.error("Couldn't load your current preferences");
+            })
+            .finally(() => {
+                if (!cancelled) setIsFetching(false);
+            });
+
+        return () => {
+            cancelled = true;
+        };
+    }, [session, sessionLoading]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -36,8 +66,13 @@ export default function EditProfileTags() {
 
         setIsLoading(true);
 
-        const arrTeach = tags.skillsToTeach.split(",").map(s => s.trim()).filter(Boolean);
-        const arrLearn = tags.skillsToLearn.split(",").map(s => s.trim()).filter(Boolean);
+        // dedupe while preserving order
+        const arrTeach = Array.from(
+            new Set(tags.skillsToTeach.split(",").map((s) => s.trim()).filter(Boolean))
+        );
+        const arrLearn = Array.from(
+            new Set(tags.skillsToLearn.split(",").map((s) => s.trim()).filter(Boolean))
+        );
 
         try {
             const res = await fetch(`${process.env.NEXT_PUBLIC_URL}/api/users/profile`, {
@@ -55,7 +90,7 @@ export default function EditProfileTags() {
                 toast.success("Interests updated successfully!");
                 router.push("/dashboard/user/profile");
             } else {
-                toast.error("Failed to update profile tags");
+                toast.error(data?.message || "Failed to update profile tags");
             }
         } catch (err) {
             console.error(err);
@@ -64,6 +99,22 @@ export default function EditProfileTags() {
             setIsLoading(false);
         }
     };
+
+    if (sessionLoading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-pink-500"></div>
+            </div>
+        );
+    }
+
+    if (!session?.user) {
+        return (
+            <div className="min-h-screen text-gray-400 flex items-center justify-center">
+                Please log in to edit your profile.
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen text-white flex items-center justify-center p-6">
@@ -77,33 +128,45 @@ export default function EditProfileTags() {
 
                 <form onSubmit={handleSubmit} className="space-y-5">
                     <div>
-                        <label className="block text-xs font-semibold text-gray-300 mb-1.5">Skills I Can Teach</label>
+                        <label htmlFor="skillsToTeach" className="block text-xs font-semibold text-gray-300 mb-1.5">
+                            Skills I Can Teach
+                        </label>
                         <input
+                            id="skillsToTeach"
                             type="text"
                             value={tags.skillsToTeach}
                             onChange={(e) => setTags({ ...tags, skillsToTeach: e.target.value })}
                             placeholder="Next.js, Tailwind CSS, Figma"
-                            className="w-full rounded-xl border border-gray-800 bg-gray-950 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-purple-500/40 focus:border-purple-500 transition-all"
+                            disabled={isFetching}
+                            className="w-full rounded-xl border border-gray-800 bg-gray-950 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-purple-500/40 focus:border-purple-500 transition-all disabled:opacity-50"
                         />
                     </div>
 
                     <div>
-                        <label className="block text-xs font-semibold text-gray-300 mb-1.5">Skills I Want to Learn</label>
+                        <label htmlFor="skillsToLearn" className="block text-xs font-semibold text-gray-300 mb-1.5">
+                            Skills I Want to Learn
+                        </label>
                         <input
+                            id="skillsToLearn"
                             type="text"
                             value={tags.skillsToLearn}
                             onChange={(e) => setTags({ ...tags, skillsToLearn: e.target.value })}
                             placeholder="Python, Machine Learning, German"
-                            className="w-full rounded-xl border border-gray-800 bg-gray-950 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-pink-500/40 focus:border-pink-500 transition-all"
+                            disabled={isFetching}
+                            className="w-full rounded-xl border border-gray-800 bg-gray-950 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-pink-500/40 focus:border-pink-500 transition-all disabled:opacity-50"
                         />
                     </div>
 
                     <button
                         type="submit"
-                        disabled={isLoading}
+                        disabled={isLoading || isFetching}
                         className="w-full rounded-xl bg-gradient-to-r from-purple-600 to-pink-500 py-3 text-sm font-bold text-white hover:opacity-90 transition-all shadow-md disabled:opacity-60"
                     >
-                        {isLoading ? "Saving Settings..." : "Save Preferences"}
+                        {isFetching
+                            ? "Loading your preferences..."
+                            : isLoading
+                                ? "Saving Settings..."
+                                : "Save Preferences"}
                     </button>
                 </form>
             </div>
