@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { authClient } from "@/src/lib/auth-client";
+import { fetchUserProfileSelfHealing } from "@/src/lib/fetchUserProfileSelfHealing";
 import Link from "next/link";
 
 type UserProfile = {
@@ -36,17 +37,11 @@ export default function ProfilePage() {
         setIsLoading(true);
         setFetchError(false);
 
-        fetch(
-            `${process.env.NEXT_PUBLIC_URL}/api/users/dashboard/info?email=${encodeURIComponent(
-                session.user.email
-            )}`
-        )
-            .then(async (res) => {
-                if (!res.ok) {
-                    throw new Error(`Request failed with status ${res.status}`);
-                }
-                return res.json();
-            })
+        fetchUserProfileSelfHealing({
+            name: session.user.name,
+            email: session.user.email,
+            image: session.user.image,
+        })
             .then((resData) => {
                 if (cancelled) return;
 
