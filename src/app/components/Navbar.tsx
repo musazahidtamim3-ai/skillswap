@@ -163,13 +163,6 @@ export default function Navbar() {
                       >
                         Dashboard
                       </Link>
-                      <Link
-                        href="/skills/manage"
-                        onClick={() => setIsDropdownOpen(false)}
-                        className="block rounded-xl px-3 py-2 text-xs font-semibold text-gray-300 hover:bg-gray-700 hover:text-white transition-colors"
-                      >
-                        Manage Skills
-                      </Link>
                       <div className="my-1 border-t border-gray-700" />
                       <button
                         onClick={handleLogout}

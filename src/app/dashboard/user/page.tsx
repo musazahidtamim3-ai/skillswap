@@ -4,8 +4,12 @@ import { authClient } from "@/src/lib/auth-client";
 import { useEffect, useState } from "react";
 import {
     FaGraduationCap, FaClock, FaExchangeAlt, FaStar,
-    FaBookOpen, FaCalendarCheck, FaBolt
+    FaBookOpen, FaBolt, FaChartLine
 } from "react-icons/fa";
+import {
+    ResponsiveContainer, RadialBarChart, RadialBar, PolarAngleAxis,
+    AreaChart, Area, Tooltip, XAxis, YAxis, CartesianGrid
+} from "recharts";
 
 interface Session {
     _id: string;
@@ -34,10 +38,18 @@ interface UserData {
     reviewCount: number;
 }
 
+interface WeeklyStatPoint {
+    date: string;
+    label: string;
+    count: number;
+}
+
 export default function UserDashboardHome() {
     const [user, setUser] = useState<UserData | null>(null);
-    const [upcomingSessions, setUpcomingSessions] = useState<Session[]>([]);
     const [activeTracks, setActiveTracks] = useState<ActiveTrack[]>([]);
+    const [weeklyStats, setWeeklyStats] = useState<WeeklyStatPoint[]>([]);
+    const [weeklyTotal, setWeeklyTotal] = useState(0);
+    const [statsLoading, setStatsLoading] = useState(true);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -61,18 +73,29 @@ export default function UserDashboardHome() {
                 const jsonResponse = await response.json();
 
                 if (jsonResponse.success && jsonResponse.data) {
-                    const { user: dbUser, upcomingSessions: dbSessions, activeTracks: dbTracks } = jsonResponse.data;
-
-                    const processedSessions = dbSessions.map((session: any) => ({
-                        ...session,
-                        role: session.userEmail === userEmail ? "Teaching" : "Learning"
-                    }));
+                    const { user: dbUser, activeTracks: dbTracks } = jsonResponse.data;
 
                     setUser(dbUser);
-                    setUpcomingSessions(processedSessions);
                     setActiveTracks(dbTracks || []);
                 } else {
                     throw new Error(jsonResponse.message || "Failed to fetch data");
+                }
+                try {
+                    setStatsLoading(true);
+                    const statsRes = await fetch(
+                        `${process.env.NEXT_PUBLIC_URL}/api/skills/stats/weekly?email=${encodeURIComponent(userEmail)}`
+                    );
+                    if (statsRes.ok) {
+                        const statsJson = await statsRes.json();
+                        if (statsJson.success) {
+                            setWeeklyStats(statsJson.data || []);
+                            setWeeklyTotal(statsJson.total || 0);
+                        }
+                    }
+                } catch (statsErr) {
+                    console.error("Failed to load weekly stats:", statsErr);
+                } finally {
+                    setStatsLoading(false);
                 }
 
             } catch (err: any) {
@@ -108,6 +131,9 @@ export default function UserDashboardHome() {
         );
     }
 
+    const ratingValue = user.rating ?? 0;
+    const ratingChartData = [{ name: "Trust Score", value: ratingValue, fill: "#f59e0b" }];
+
     return (
         <main className="min-h-screen p-4 sm:p-6 lg:p-8 text-slate-900 dark:text-slate-100 transition-colors">
             <div className="max-w-7xl mx-auto space-y-8">
@@ -120,7 +146,7 @@ export default function UserDashboardHome() {
                         <div className="flex items-center gap-5">
                             <div className="relative">
                                 <img
-                                    src={user.avatarUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${user.name}`}
+                                    src={user.avatarUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(user.name)}`}
                                     alt={user.name}
                                     className="w-16 h-16 md:w-20 md:h-20 rounded-2xl object-cover ring-4 ring-indigo-500/30 shadow-md"
                                 />
@@ -145,14 +171,14 @@ export default function UserDashboardHome() {
                             </div>
                             <div>
                                 <p className="text-[10px] uppercase font-bold text-indigo-400 tracking-wider">Wallet Balance</p>
-                                <p className="text-2xl font-black font-mono tracking-tight">{user.learningBalanceMinutes} <span className="text-xs text-slate-400 font-normal">Mins</span></p>
+                                <p className="text-2xl font-black font-mono tracking-tight">{user.learningBalanceMinutes ?? 0} <span className="text-xs text-slate-400 font-normal">Mins</span></p>
                             </div>
                         </div>
                     </div>
                 </section>
 
-                {/* Stats Grid */}
-                <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* Stats Grid - now powered by recharts */}
+                <section className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                     <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200/60 dark:border-slate-800/60 shadow-sm">
                         <div className="flex items-center gap-3 text-indigo-600 dark:text-indigo-400 mb-4">
                             <div className="p-2 bg-indigo-50 dark:bg-indigo-950/40 rounded-lg"><FaGraduationCap size={20} /></div>
@@ -185,47 +211,104 @@ export default function UserDashboardHome() {
                         </div>
                     </div>
 
-                    <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200/60 dark:border-slate-800/60 shadow-sm flex flex-col justify-between">
-                        <div className="flex items-center gap-3 text-amber-500 mb-4">
+                    {/* Trust Score - RadialBarChart gauge */}
+                    <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200/60 dark:border-slate-800/60 shadow-sm flex flex-col">
+                        <div className="flex items-center gap-3 text-amber-500 mb-2">
                             <div className="p-2 bg-amber-50 dark:bg-amber-950/40 rounded-lg"><FaStar size={18} /></div>
                             <h3 className="font-bold text-sm tracking-wide uppercase text-slate-500 dark:text-slate-400">Trust Score</h3>
                         </div>
-                        <div className="flex items-baseline gap-2">
-                            <span className="text-4xl font-black font-mono">{user.rating?.toFixed(1) || "0.0"}</span>
-                            <span className="text-xs text-slate-400 font-medium">({user.reviewCount || 0} reviews)</span>
+                        <div className="relative flex-1 flex items-center justify-center min-h-[120px]">
+                            <ResponsiveContainer width="100%" height={120}>
+                                <RadialBarChart
+                                    innerRadius="70%"
+                                    outerRadius="100%"
+                                    data={ratingChartData}
+                                    startAngle={90}
+                                    endAngle={-270}
+                                    barSize={10}
+                                >
+                                    <PolarAngleAxis
+                                        type="number"
+                                        domain={[0, 5]}
+                                        angleAxisId={0}
+                                        tick={false}
+                                    />
+                                    <RadialBar
+                                        background={{ fill: "#f1f5f9" }}
+                                        dataKey="value"
+                                        cornerRadius={8}
+                                    />
+                                </RadialBarChart>
+                            </ResponsiveContainer>
+                            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                                <span className="text-2xl font-black font-mono">{ratingValue.toFixed(1)}</span>
+                                <span className="text-[10px] text-slate-400 font-medium">/ 5.0</span>
+                            </div>
                         </div>
-                        <div className="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full mt-3 overflow-hidden">
-                            <div className="bg-amber-500 h-full rounded-full" style={{ width: `${(user.rating / 5) * 100}%` }} />
-                        </div>
+                        <p className="text-center text-xs text-slate-400 font-medium mt-1">
+                            {user.reviewCount || 0} review{user.reviewCount === 1 ? "" : "s"}
+                        </p>
                     </div>
+
+                    
                 </section>
 
                 {/* Core Dashboard Data Grid */}
                 <section className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    {/* Live Sessions Agenda */}
-                    <div className="lg:col-span-2 bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-slate-200/60 dark:border-slate-800/60 space-y-4">
-                        <h2 className="text-lg font-black flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
-                            <FaCalendarCheck className="text-slate-400" size={18} /> Live Sessions Agenda
-                        </h2>
-                        <div className="space-y-3">
-                            {upcomingSessions.length === 0 ? (
-                                <p className="text-sm text-slate-400 py-6 text-center">No upcoming sessions scheduled.</p>
+                    {/* Weekly Activity - sparkline */}
+                    <div className="bg-white col-span-2 dark:bg-slate-900 p-6 rounded-2xl border border-slate-200/60 dark:border-slate-800/60 shadow-sm flex flex-col">
+                        <div className="flex items-center gap-3 text-emerald-600 dark:text-emerald-400 mb-2">
+                            <div className="p-2 bg-emerald-50 dark:bg-emerald-950/40 rounded-lg"><FaChartLine size={18} /></div>
+                            <h3 className="font-bold text-sm tracking-wide uppercase text-slate-500 dark:text-slate-400">Weekly Activity</h3>
+                        </div>
+                        <div className="flex items-baseline gap-2 mb-2">
+                            <span className="text-2xl font-black font-mono">{weeklyTotal}</span>
+                            <span className="text-xs text-slate-400 font-medium">skill{weeklyTotal === 1 ? "" : "s"} posted / 7d</span>
+                        </div>
+                        <div className="flex-1 min-h-[90px]">
+                            {statsLoading ? (
+                                <div className="h-full flex items-center justify-center">
+                                    <div className="w-5 h-5 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+                                </div>
+                            ) : weeklyStats.length === 0 ? (
+                                <p className="text-xs text-slate-400 h-full flex items-center justify-center">No data yet.</p>
                             ) : (
-                                upcomingSessions.map((session) => (
-                                    <div key={session._id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-slate-50 dark:bg-slate-950/40 rounded-2xl border border-slate-100 dark:border-slate-800/80 hover:border-slate-300 dark:hover:border-slate-700 transition-all gap-4">
-                                        <div className="flex items-center gap-3">
-                                            <div className={`w-2 h-2 rounded-full ${session.role === "Teaching" ? "bg-indigo-500 shadow-sm" : "bg-fuchsia-500 shadow-sm"}`} />
-                                            <div>
-                                                <h4 className="font-bold text-sm tracking-tight">{session.skillName}</h4>
-                                                <p className="text-xs text-slate-400 mt-0.5">Partner: {session.partnerName} • <span className="font-medium text-slate-500">{session.role}</span></p>
-                                            </div>
-                                        </div>
-                                        <div className="flex items-center justify-between sm:justify-end gap-3">
-                                            <span className="text-[11px] font-bold text-slate-600 dark:text-slate-400 bg-slate-200/60 dark:bg-slate-800 px-3 py-1 rounded-xl font-mono">{session.timeString || "Pending Time"}</span>
-                                            <span className={`text-[11px] font-extrabold px-3 py-1 rounded-xl ${session.status === "Confirmed" ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20" : "bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20"}`}>{session.status}</span>
-                                        </div>
-                                    </div>
-                                ))
+                                <ResponsiveContainer width="100%" height={90}>
+                                    <AreaChart data={weeklyStats} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
+                                        <defs>
+                                            <linearGradient id="weeklySparklineFill" x1="0" y1="0" x2="0" y2="1">
+                                                <stop offset="5%" stopColor="#10b981" stopOpacity={0.4} />
+                                                <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                                            </linearGradient>
+                                        </defs>
+                                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" strokeOpacity={0.5} />
+                                        <XAxis
+                                            dataKey="label"
+                                            tickLine={false}
+                                            axisLine={false}
+                                            tick={{ fontSize: 10, fill: "#94a3b8" }}
+                                        />
+                                        <YAxis
+                                            allowDecimals={false}
+                                            tickLine={false}
+                                            axisLine={false}
+                                            width={28}
+                                            tick={{ fontSize: 10, fill: "#94a3b8" }}
+                                        />
+                                        <Tooltip
+                                            contentStyle={{ borderRadius: 10, border: "1px solid #e2e8f0", fontSize: 11, padding: "4px 8px" }}
+                                            labelFormatter={(label, payload) => payload?.[0]?.payload?.date ?? label}
+                                            formatter={(value: number) => [`${value}`, "Posted"]}
+                                        />
+                                        <Area
+                                            type="monotone"
+                                            dataKey="count"
+                                            stroke="#10b981"
+                                            strokeWidth={2}
+                                            fill="url(#weeklySparklineFill)"
+                                        />
+                                    </AreaChart>
+                                </ResponsiveContainer>
                             )}
                         </div>
                     </div>
