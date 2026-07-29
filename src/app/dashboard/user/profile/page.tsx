@@ -153,7 +153,7 @@ export default function ProfilePage() {
                     <div className="md:col-span-1 space-y-6">
 
                         <div className="mt-4 sm:mt-0 flex-1">
-                            <h1 className="text-3xl font-extrabold bg-gradient-to-r from-purple-400 via-fuchsia-400 to-pink-400 bg-clip-text text-transparent">
+                            <h1 className="text-3xl font-extrabold bg-linear-to-r from-purple-400 via-fuchsia-400 to-pink-400 bg-clip-text text-transparent">
                                 {profile.name}
                             </h1>
                             <p className="text-sm text-gray-400 mt-1">{profile.email}</p>
