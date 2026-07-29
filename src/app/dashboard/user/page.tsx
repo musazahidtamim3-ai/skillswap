@@ -4,7 +4,7 @@ import { authClient } from "@/src/lib/auth-client";
 import { useEffect, useState } from "react";
 import {
     FaGraduationCap, FaClock, FaExchangeAlt, FaStar,
-    FaBookOpen, FaBolt, FaChartLine
+    FaBookOpen, FaCalendarCheck, FaBolt, FaChartLine
 } from "react-icons/fa";
 import {
     ResponsiveContainer, RadialBarChart, RadialBar, PolarAngleAxis,
@@ -46,6 +46,7 @@ interface WeeklyStatPoint {
 
 export default function UserDashboardHome() {
     const [user, setUser] = useState<UserData | null>(null);
+    const [upcomingSessions, setUpcomingSessions] = useState<Session[]>([]);
     const [activeTracks, setActiveTracks] = useState<ActiveTrack[]>([]);
     const [weeklyStats, setWeeklyStats] = useState<WeeklyStatPoint[]>([]);
     const [weeklyTotal, setWeeklyTotal] = useState(0);
@@ -73,13 +74,22 @@ export default function UserDashboardHome() {
                 const jsonResponse = await response.json();
 
                 if (jsonResponse.success && jsonResponse.data) {
-                    const { user: dbUser, activeTracks: dbTracks } = jsonResponse.data;
+                    const { user: dbUser, upcomingSessions: dbSessions, activeTracks: dbTracks } = jsonResponse.data;
+
+                    const processedSessions = dbSessions.map((session: any) => ({
+                        ...session,
+                        role: session.userEmail === userEmail ? "Teaching" : "Learning"
+                    }));
 
                     setUser(dbUser);
+                    setUpcomingSessions(processedSessions);
                     setActiveTracks(dbTracks || []);
                 } else {
                     throw new Error(jsonResponse.message || "Failed to fetch data");
                 }
+
+                // Weekly skill-posting activity, shown as a sparkline in the Stats section.
+                // Fetched separately so a failure here doesn't block the rest of the dashboard.
                 try {
                     setStatsLoading(true);
                     const statsRes = await fetch(
@@ -298,7 +308,7 @@ export default function UserDashboardHome() {
                                         <Tooltip
                                             contentStyle={{ borderRadius: 10, border: "1px solid #e2e8f0", fontSize: 11, padding: "4px 8px" }}
                                             labelFormatter={(label, payload) => payload?.[0]?.payload?.date ?? label}
-                                            formatter={(value: number) => [`${value}`, "Posted"]}
+                                            formatter={(value) => [`${value ?? 0}`, "Posted"]}
                                         />
                                         <Area
                                             type="monotone"
@@ -312,7 +322,6 @@ export default function UserDashboardHome() {
                             )}
                         </div>
                     </div>
-
                     <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-slate-200/60 dark:border-slate-800/60 space-y-4">
                         <h2 className="text-lg font-black flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
                             <FaExchangeAlt className="text-slate-400" size={16} /> My Active Skill Posts
