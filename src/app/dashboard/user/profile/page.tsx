@@ -143,7 +143,7 @@ export default function ProfilePage() {
                         />
                     </div>
                     <Link href="/dashboard/user/profile/edit">
-                        <button className="px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 rounded-xl font-semibold transition-all">
+                        <button className="px-4 py-2 bg-linear-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 rounded-xl font-semibold transition-all">
                             Edit Profile
                         </button>
                     </Link>
