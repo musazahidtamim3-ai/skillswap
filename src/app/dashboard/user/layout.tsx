@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LayoutList, Plus, BookOpen, Person, Xmark, Bars } from "@gravity-ui/icons";
@@ -23,6 +23,18 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     const { data: sessionData } = authClient.useSession();
     const user = sessionData?.user;
 
+    // sidebar khola thakle body scroll lock, ar route change hole auto close
+    useEffect(() => {
+        document.body.style.overflow = isSidebarOpen ? "hidden" : "";
+        return () => {
+            document.body.style.overflow = "";
+        };
+    }, [isSidebarOpen]);
+
+    useEffect(() => {
+        setIsSidebarOpen(false);
+    }, [pathname]);
+
     const menuItems: MenuItem[] = [
         { label: "Overview", href: "/dashboard/user", icon: <LayoutList className="w-5 h-5" /> },
         { label: "Add Skills", href: "/dashboard/user/add-skills", icon: <Plus className="w-5 h-5" /> },
@@ -31,7 +43,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     ];
 
     return (
-        <div className="min-h-screen bg-gray-950 text-neutral-900 flex flex-col relative transition-colors duration-300">
+        <div className="min-h-screen bg-gray-950 text-neutral-100 flex flex-col relative transition-colors duration-300 overflow-x-hidden">
 
             <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl pointer-events-none" />
             <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-pink-600/10 rounded-full blur-3xl pointer-events-none" />
@@ -41,6 +53,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 <button
                     onClick={() => setIsSidebarOpen(!isSidebarOpen)}
                     className="flex items-center justify-center h-14 w-14 rounded-full bg-gradient-to-r from-purple-500 to-indigo-500 text-white shadow-xl shadow-orange-600/30 border border-orange-400/30 focus:outline-none active:scale-95 transition-transform"
+                    aria-label="Toggle menu"
                 >
                     {isSidebarOpen ? <Xmark className="h-6 w-6" /> : <Bars className="h-6 w-6" />}
                 </button>
@@ -50,7 +63,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 <aside
                     className={`
                               fixed inset-y-0 left-0 z-40 w-64 bg-gray-900 pt-24 px-4
-                              transition-transform duration-300
+                              transition-transform duration-300 ease-in-out
                               md:sticky md:top-20 md:z-0 md:h-[calc(100vh-5rem)] md:translate-x-0 md:bg-gray-900 md:pt-6
                               ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"}
                          `}
@@ -61,7 +74,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                         </span>
                         <button
                             onClick={() => setIsSidebarOpen(false)}
-                            className="p-1 rounded-lg text-neutral-500 hover:bg-neutral-100"
+                            className="p-1 rounded-lg text-neutral-500 hover:bg-neutral-800"
                         >
                             <Xmark className="w-5 h-5" />
                         </button>
@@ -91,7 +104,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 {isSidebarOpen && (
                     <div
                         onClick={() => setIsSidebarOpen(false)}
-                        className="fixed inset-0 z-30 bg-black/60 backdrop-blur-sm md:hidden transition-opacity"
+                        className="md:hidden fixed inset-0 z-30 bg-black/60 backdrop-blur-sm transition-opacity"
                     />
                 )}
 

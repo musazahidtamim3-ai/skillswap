@@ -22,13 +22,13 @@ const categories: Category[] = [
 
 export default function Categories() {
   return (
-    <section className="py-20 bg-white dark:bg-gray-900" id="categories">
+    <section className="py-20 bg-gray-900" id="categories">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
-          <span className="inline-block px-4 py-1 rounded-full text-sm font-semibold text-purple-600 bg-purple-100 dark:bg-purple-500/10 dark:text-purple-400 mb-3">
+          <span className="inline-block px-4 py-1 rounded-full text-sm font-semibold  bg-purple-500/10 text-purple-400 mb-3">
             Categories
           </span>
-          <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 dark:text-white">
+          <h2 className="text-3xl md:text-4xl font-extrabold text-white">
             Explore{" "}
             <span className="bg-gradient-to-r from-purple-600 to-pink-500 bg-clip-text text-transparent">
               Skill Categories
@@ -44,22 +44,22 @@ export default function Categories() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.3 }}
               transition={{ duration: 0.5, delay: index * 0.08 }}
-              className="group relative flex flex-col items-center justify-center p-6 rounded-2xl bg-gradient-to-br from-purple-50 to-pink-50 dark:from-gray-800 dark:to-gray-800 border border-transparent hover:border-pink-300 dark:hover:border-purple-700 cursor-pointer overflow-hidden transition-all hover:-translate-y-1 hover:shadow-xl"
+              className="group relative flex flex-col items-center justify-center p-6 rounded-2xl bg-gradient-to-br from-gray-800 to-gray-800 border border-transparent hover:border-purple-700 cursor-pointer overflow-hidden transition-all hover:-translate-y-1 hover:shadow-xl"
             >
               {/* Hover glow */}
               <div className="absolute inset-0 bg-gradient-to-br from-purple-600 to-pink-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
               <div className="relative z-10 flex flex-col items-center">
-                <div className="w-14 h-14 flex items-center justify-center rounded-full bg-white dark:bg-gray-700 shadow-sm mb-3 group-hover:bg-white/20 group-hover:backdrop-blur-sm transition-colors">
+                <div className="w-14 h-14 flex items-center justify-center rounded-full bg-gray-700 shadow-sm mb-3 group-hover:bg-white/20 group-hover:backdrop-blur-sm transition-colors">
                   <cat.Icon
                     size={26}
-                    className="text-purple-600 dark:text-pink-400 group-hover:text-white transition-colors"
+                    className="text-pink-400 group-hover:text-white transition-colors"
                   />
                 </div>
-                <span className="text-base font-semibold text-gray-800 dark:text-gray-100 group-hover:text-white transition-colors">
+                <span className="text-base font-semibold text-gray-100 group-hover:text-white transition-colors">
                   {cat.name}
                 </span>
-                <span className="text-xs text-gray-500 dark:text-gray-400 group-hover:text-purple-100 mt-1 transition-colors">
+                <span className="text-xs text-gray-400 group-hover:text-purple-100 mt-1 transition-colors">
                   {cat.count}
                 </span>
               </div>

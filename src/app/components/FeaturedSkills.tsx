@@ -38,15 +38,15 @@ const skills = [
 export default function FeaturedSkills() {
   return (
     <section
-      className="py-20 bg-gradient-to-b from-purple-50 via-white to-pink-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-900"
+      className="py-20 bg-gradient-to-b from-gray-900 via-gray-900 to-gray-900"
       id="featured-skills"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
-          <span className="inline-block px-4 py-1 rounded-full text-sm font-semibold text-pink-600 bg-pink-100 dark:bg-pink-500/10 dark:text-pink-400 mb-3">
+          <span className="inline-block px-4 py-1 rounded-full text-sm font-semibold  bg-pink-500/10 text-pink-400 mb-3">
             Featured Skills
           </span>
-          <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 dark:text-white">
+          <h2 className="text-3xl md:text-4xl font-extrabold text-white">
             Learn From{" "}
             <span className="bg-gradient-to-r from-purple-600 to-pink-500 bg-clip-text text-transparent">
               Top Tech Skills
@@ -58,7 +58,7 @@ export default function FeaturedSkills() {
           {skills.map((skill) => (
             <div
               key={skill.title}
-              className="group bg-white dark:bg-gray-800 rounded-2xl shadow-md hover:shadow-2xl overflow-hidden transition-all duration-300 hover:-translate-y-2 border border-transparent hover:border-pink-200 dark:hover:border-purple-800"
+              className="group bg-gray-800 rounded-2xl shadow-md hover:shadow-2xl overflow-hidden transition-all duration-300 hover:-translate-y-2 border border-transparent hover:border-purple-800"
             >
               <div className="relative h-35 overflow-hidden">
                 <Image
@@ -74,10 +74,10 @@ export default function FeaturedSkills() {
               </div>
 
               <div className="p-5">
-                <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-2 group-hover:text-purple-600 dark:group-hover:text-pink-400 transition-colors">
+                <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-2 group-hover:text-pink-400 transition-colors">
                   {skill.title}
                 </h3>
-                <p className="text-gray-600 dark:text-gray-400 text-sm mb-4 leading-relaxed">
+                <p className="text-gray-400 text-sm mb-4 leading-relaxed">
                   {skill.description}
                 </p>
 
@@ -95,7 +95,7 @@ export default function FeaturedSkills() {
                         }
                         className={`w-4 h-4 ${i < Math.round(skill.rating)
                           ? "text-pink-500"
-                          : "text-gray-300 dark:text-gray-600"
+                          : "text-gray-600"
                           }`}
                       >
                         <path

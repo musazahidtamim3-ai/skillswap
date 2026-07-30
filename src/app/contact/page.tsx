@@ -106,15 +106,15 @@ export default function ContactPage() {
                         {contactInfo.map((item) => (
                             <div
                                 key={item.title}
-                                className="flex flex-col items-center text-center p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-lg"
+                                className="flex flex-col items-center text-center p-6 bg-gray-800 rounded-2xl shadow-lg"
                             >
                                 <div className="w-14 h-14 flex items-center justify-center rounded-full bg-gradient-to-r from-purple-600 to-pink-500 mb-4">
                                     <item.icon className="text-white" size={22} />
                                 </div>
-                                <h3 className="text-base font-bold text-gray-900 dark:text-white mb-1">
+                                <h3 className="text-base font-bold text-white mb-1">
                                     {item.title}
                                 </h3>
-                                <p className="text-sm text-gray-600 dark:text-gray-400">
+                                <p className="text-sm text-gray-400">
                                     {item.detail}
                                 </p>
                             </div>
@@ -128,15 +128,15 @@ export default function ContactPage() {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
                         {/* Form */}
-                        <div className="lg:col-span-2 bg-gray-50 dark:bg-gray-800 rounded-2xl p-8">
-                            <h2 className="text-2xl font-extrabold text-gray-900 dark:text-white mb-6">
+                        <div className="lg:col-span-2 bg-gray-800 rounded-2xl p-8">
+                            <h2 className="text-2xl font-extrabold text-white mb-6">
                                 Send Us a Message
                             </h2>
 
                             <form onSubmit={handleSubmit} className="space-y-4">
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1.5">
+                                        <label className="block text-xs font-semibold text-gray-300 mb-1.5">
                                             Your Name
                                         </label>
                                         <input
@@ -145,11 +145,11 @@ export default function ContactPage() {
                                             placeholder="John Doe"
                                             value={formData.name}
                                             onChange={handleChange}
-                                            className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 py-3 text-sm text-gray-800 dark:text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-400/40 focus:border-purple-400 transition-all"
+                                            className="w-full rounded-xl border border-gray-700 bg-gray-900 px-4 py-3 text-sm text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-400/40 focus:border-purple-400 transition-all"
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1.5">
+                                        <label className="block text-xs font-semibold text-gray-300 mb-1.5">
                                             Email Address
                                         </label>
                                         <input
@@ -158,13 +158,13 @@ export default function ContactPage() {
                                             placeholder="you@example.com"
                                             value={formData.email}
                                             onChange={handleChange}
-                                            className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 py-3 text-sm text-gray-800 dark:text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-400/40 focus:border-pink-400 transition-all"
+                                            className="w-full rounded-xl border border-gray-700 bg-gray-900 px-4 py-3 text-sm text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-400/40 focus:border-pink-400 transition-all"
                                         />
                                     </div>
                                 </div>
 
                                 <div>
-                                    <label className="block text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1.5">
+                                    <label className="block text-xs font-semibold text-gray-300 mb-1.5">
                                         Subject
                                     </label>
                                     <input
@@ -173,12 +173,12 @@ export default function ContactPage() {
                                         placeholder="How can we help?"
                                         value={formData.subject}
                                         onChange={handleChange}
-                                        className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 py-3 text-sm text-gray-800 dark:text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-400/40 focus:border-purple-400 transition-all"
+                                        className="w-full rounded-xl border border-gray-700 bg-gray-900 px-4 py-3 text-sm text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-400/40 focus:border-purple-400 transition-all"
                                     />
                                 </div>
 
                                 <div>
-                                    <label className="block text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1.5">
+                                    <label className="block text-xs font-semibold text-gray-300 mb-1.5">
                                         Message
                                     </label>
                                     <textarea
@@ -187,7 +187,7 @@ export default function ContactPage() {
                                         placeholder="Write your message here..."
                                         value={formData.message}
                                         onChange={handleChange}
-                                        className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 py-3 text-sm text-gray-800 dark:text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-400/40 focus:border-pink-400 transition-all resize-none"
+                                        className="w-full rounded-xl border border-gray-700 bg-gray-900 px-4 py-3 text-sm text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-400/40 focus:border-pink-400 transition-all resize-none"
                                     />
                                 </div>
 

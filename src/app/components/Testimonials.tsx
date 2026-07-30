@@ -38,15 +38,15 @@ const testimonials = [
 export default function Testimonials() {
   return (
     <section
-      className="py-20 bg-gradient-to-b from-purple-50 to-white dark:from-gray-900 dark:to-gray-900"
+      className="py-20 bg-gradient-to-b from-gray-900 to-gray-900"
       id="testimonials"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
-          <span className="inline-block px-4 py-1 rounded-full text-sm font-semibold text-purple-600 bg-purple-100 dark:bg-purple-500/10 dark:text-purple-400 mb-3">
+          <span className="inline-block px-4 py-1 rounded-full text-sm font-semibold  bg-purple-500/10 text-purple-400 mb-3">
             Testimonials
           </span>
-          <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 dark:text-white">
+          <h2 className="text-3xl md:text-4xl font-extrabold text-white">
             What Our{" "}
             <span className="bg-gradient-to-r from-purple-600 to-pink-500 bg-clip-text text-transparent">
               Users Say
@@ -62,7 +62,7 @@ export default function Testimonials() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.3 }}
               transition={{ duration: 0.6, delay: index * 0.15 }}
-              className="relative flex flex-col items-center text-center p-8 pt-14 bg-white dark:bg-gray-800 rounded-2xl shadow-md hover:shadow-2xl transition-shadow"
+              className="relative flex flex-col items-center text-center p-8 pt-14 bg-gray-800 rounded-2xl shadow-md hover:shadow-2xl transition-shadow"
             >
               {/* Quote icon badge */}
               <div className="absolute -top-6 w-12 h-12 flex items-center justify-center rounded-full bg-gradient-to-r from-purple-600 to-pink-500 shadow-md">
@@ -76,7 +76,7 @@ export default function Testimonials() {
                   alt={t.name}
                   width={80}
                   height={80}
-                  className="w-20 h-20 rounded-full object-cover border-4 border-white dark:border-gray-800"
+                  className="w-20 h-20 rounded-full object-cover border-4 border-gray-800"
                 />
               </div>
 
@@ -89,17 +89,17 @@ export default function Testimonials() {
                     className={
                       i < t.rating
                         ? "text-pink-500"
-                        : "text-gray-300 dark:text-gray-600"
+                        : "text-gray-600"
                     }
                   />
                 ))}
               </div>
 
-              <p className="text-gray-600 dark:text-gray-300 italic mb-5 leading-relaxed">
+              <p className="text-gray-300 italic mb-5 leading-relaxed">
                 &ldquo;{t.quote}&rdquo;
               </p>
 
-              <span className="text-lg font-bold text-gray-800 dark:text-gray-100">
+              <span className="text-lg font-bold text-gray-100">
                 {t.name}
               </span>
               <span className="text-sm text-purple-600 dark:text-pink-400 font-medium">
